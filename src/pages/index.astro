@@ -1,8 +1,9 @@
 ---
-import Main from '../layouts/Main.astro';
+import FormBuilder from "../components/FormBuilder.vue";
+import Main from "../layouts/Main.astro";
 ---
 
 <Main>
 	<h1>Form Mailer Demo</h1>
-	<p>hello world</p>
+	<FormBuilder client:load />
 </Main>
