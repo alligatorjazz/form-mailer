@@ -1,4 +1,3 @@
-import export type { HTMLAttributes } from "astro/types";
 import { z } from "zod";
 
 // TODO: add support for non-input form field types
@@ -24,9 +23,9 @@ export const SupportedInputTypeSchema = z.enum([
 	"text",
 	"time",
 	"url",
-	"week",
-	"textarea",
+	"week"
 ]);
+export const SupportedFieldTypeSchema = z.union([SupportedInputTypeSchema, z.enum(["textarea", "select"])]);
 
 export const FormFieldSchema = z.object({
 	name: z
@@ -46,20 +45,23 @@ export const FormFieldSchema = z.object({
 		.describe("The default value of the form field."),
 	min: z
 		.number()
+		.optional()
 		.default(1)
 		.describe(
 			"For text-based inputs, this is the minimum character count. For number-based inputs, this is the minimum value."
 		),
 	max: z
 		.number()
+		.optional()
 		.default(250)
 		.describe(
 			"For text-based inputs, this is the maximum character count. For number-based inputs, this is the maximum value."
 		),
-	type: SupportedInputTypeSchema.describe(
-		"The `type` directly corresponds with the `type` html attribute on `HTMLInputElements`, with the addition of `textarea`."
+	type: SupportedFieldTypeSchema.describe(
+		"The `type` directly corresponds with the `type` html attribute on `HTMLInputElements`, with the addition of `textarea` and `select`."
 	),
 });
 
-export type SupportedInputexport type = z.infer<typeof SupportedInputTypeSchema>;
+export type SupportedInputType = z.infer<typeof SupportedInputTypeSchema>;
+export type SupportedFieldType = z.infer<typeof SupportedFieldTypeSchema>;
 export type FormField = z.infer<typeof FormFieldSchema>;

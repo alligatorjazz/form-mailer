@@ -1,14 +1,19 @@
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue'
-const count = ref(0)
+import type { FormField } from "../../types";
+import FormBuilderField from './FormBuilderField.vue';
+
+const formFields = ref<FormField[]>([
+	{name: "firstName", type: "text", min: 1, max: 80}
+])
+
 </script>
 
 <template>
-	<button @click="count++">Count is: {{ count }}</button>
+	<form v-for="(field, key) in formFields" :key="key">
+		<FormBuilderField :data="field" />
+	</form>
 </template>
 
 <style scoped>
-button {
-	font-weight: bold;
-}
 </style>
