@@ -1,33 +1,36 @@
 import { z } from "zod";
 
 // TODO: add support for non-input form field types
+export const SupportedMinMaxTypeSchema = z.enum([
+	"email",
+	"number",
+	"range",
+	"tel",
+	"text",
+	"textarea"
+]);
+
 export const SupportedInputTypeSchema = z.enum([
+	"email",
+	"number",
+	"range",
+	"search",
+	"tel",
+	"text",
 	"button",
 	"checkbox",
 	"color",
 	"date",
-	"datetime-local",
-	"email",
-	"file",
-	"hidden",
-	"image",
-	"month",
-	"number",
-	"password",
-	"radio",
-	"range",
-	"reset",
-	"search",
-	"submit",
-	"tel",
-	"text",
-	"time",
-	"url",
-	"week"
+	"radio"
 ]);
-export const SupportedFieldTypeSchema = z.union([SupportedInputTypeSchema, z.enum(["textarea", "select"])]);
 
-export const FormFieldSchema = z.object({
+export const SupportedFieldTypeSchema = z.union([
+	SupportedMinMaxTypeSchema,
+	SupportedInputTypeSchema,
+	z.literal("select"),
+]);
+
+export const BaseFormField = z.object({
 	name: z
 		.string()
 		.describe(
@@ -43,25 +46,36 @@ export const FormFieldSchema = z.object({
 		.string()
 		.nullish()
 		.describe("The default value of the form field."),
+
+	type: SupportedFieldTypeSchema.describe(
+		"The `type` directly corresponds with the `type` html attribute on `HTMLInputElements`, with the addition of `textarea` and `select`."
+	),
+});
+
+export const MinMaxFormField = BaseFormField.extend({
 	min: z
 		.number()
-		.optional()
 		.default(1)
 		.describe(
 			"For text-based inputs, this is the minimum character count. For number-based inputs, this is the minimum value."
 		),
 	max: z
 		.number()
-		.optional()
 		.default(250)
 		.describe(
 			"For text-based inputs, this is the maximum character count. For number-based inputs, this is the maximum value."
 		),
-	type: SupportedFieldTypeSchema.describe(
-		"The `type` directly corresponds with the `type` html attribute on `HTMLInputElements`, with the addition of `textarea` and `select`."
+	type: SupportedMinMaxTypeSchema.describe(
+		"This `type` includes form inputs that can be constrained with minimum / maximum values: `text` (and its derivatives), `textarea`, `number`, etc."
 	),
 });
 
+export const SelectFormField = BaseFormField.extend({
+	type: z.literal("select"),
+	options: z.string().array()
+});
+
+export const FormFieldSchema = z.union([MinMaxFormField, SelectFormField])
 export type SupportedInputType = z.infer<typeof SupportedInputTypeSchema>;
 export type SupportedFieldType = z.infer<typeof SupportedFieldTypeSchema>;
 export type FormField = z.infer<typeof FormFieldSchema>;
