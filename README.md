@@ -1,5 +1,6 @@
-# form mailer demo
+# 32bit.cafe Form Mailer
 
+Easily adds
 
 ## Tech Stack
 ### Frontend

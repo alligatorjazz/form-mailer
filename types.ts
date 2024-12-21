@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 // TODO: add support for non-input form field types
+// TODO: update documentation
 export const SupportedTextInputTypeSchema = z.enum([
 	"tel",
 	"text",
@@ -9,7 +10,7 @@ export const SupportedTextInputTypeSchema = z.enum([
 	"number",
 ]);
 
-export const SupportedDateInputTypeSchema = z.enum(["date", "datetime"]);
+export const SupportedDateInputTypeSchema = z.enum(["date", "datetime-local"]);
 
 export const SupportedButtonInputTypeSchema = z.enum(["checkbox", "radio"]);
 export const SupportedInputTypeSchema = z.union([
@@ -24,7 +25,7 @@ export const SupportedFieldTypeSchema = z.union([
 	z.literal("select"),
 ]);
 
-const BaseFormField = z.object({
+const BaseFormFieldSchema = z.object({
 	name: z
 		.string()
 		.describe(
@@ -44,7 +45,7 @@ const BaseFormField = z.object({
 
 // TODO: add validation that ensures the max is past the minimum
 
-export const MinMaxFormField = BaseFormField.extend({
+export const MinMaxFormFieldSchema = BaseFormFieldSchema.extend({
 	min: z
 		.number()
 		.default(1)
@@ -57,29 +58,29 @@ export const MinMaxFormField = BaseFormField.extend({
 		.describe(
 			"For text-based inputs, this is the maximum character count. For number-based inputs, this is the maximum value."
 		),
-	type: BaseFormField.describe(
+	type: BaseFormFieldSchema.describe(
 		"This `type` includes form inputs that can be constrained with minimum / maximum values: `text` (and its derivatives), `textarea`, `number`, etc."
 	),
 });
 
-export const DateFormField = BaseFormField.extend({
-	earliest: z
+export const DateFormFieldSchema = BaseFormFieldSchema.extend({
+	after: z
 		.string()
 		.date()
 		.describe(
 			"For text-based inputs, this is the minimum character count. For number-based inputs, this is the minimum value."
 		),
-	latest: z
+	before: z
 		.string()
 		.date()
 		.optional()
 		.describe(
 			"For text-based inputs, this is the maximum character count. For number-based inputs, this is the maximum value."
 		),
-	type: z.enum(["date", "datetime"]),
+	type: z.enum(["date", "datetime-local"]),
 });
 
-export const TextFormField = MinMaxFormField.extend({
+export const TextFormFieldSchema = MinMaxFormFieldSchema.extend({
 	placeholder: z
 		.string()
 		.optional()
@@ -91,7 +92,7 @@ export const TextFormField = MinMaxFormField.extend({
 	type: SupportedTextInputTypeSchema.exclude(["number"]),
 });
 
-export const NumberFormField = MinMaxFormField.extend({
+export const NumberFormFieldSchema = MinMaxFormFieldSchema.extend({
 	defaultValue: z
 		.number()
 		.optional()
@@ -100,20 +101,14 @@ export const NumberFormField = MinMaxFormField.extend({
 });
 
 // TODO: add validation to enforce unique options
-export const SelectFormField = BaseFormField.extend({
+export const SelectFormFieldSchema = BaseFormFieldSchema.extend({
 	type: z.enum(["select", "radio"]),
-	defaultValue: z
-		.string()
-		.optional()
-		.describe(
-			"The default value for the `<select>` or `<input type='radio' />` field."
-		),
 	options: z
 		.union([z.object({ label: z.string(), value: z.string() }), z.string()])
 		.array(),
 });
 
-export const CheckboxFormField = BaseFormField.extend({
+export const CheckboxFormFieldSchema = BaseFormFieldSchema.extend({
 	type: z.literal("checkbox"),
 	defaultValue: z
 		.boolean()
@@ -124,11 +119,22 @@ export const CheckboxFormField = BaseFormField.extend({
 });
 
 export const FormFieldSchema = z.union([
-	TextFormField,
-	DateFormField,
-	SelectFormField,
-	CheckboxFormField,
+	TextFormFieldSchema,
+	NumberFormFieldSchema,
+	DateFormFieldSchema,
+	SelectFormFieldSchema,
+	CheckboxFormFieldSchema,
 ]);
+
 export type SupportedInputType = z.infer<typeof SupportedInputTypeSchema>;
 export type SupportedFieldType = z.infer<typeof SupportedFieldTypeSchema>;
+
+export type MinMaxFormField = z.infer<typeof MinMaxFormFieldSchema>;
+
+export type TextFormField = z.infer<typeof TextFormFieldSchema>;
+export type NumberFormField = z.infer<typeof NumberFormFieldSchema>;
+export type DateFormField = z.infer<typeof DateFormFieldSchema>;
+export type SelectFormField = z.infer<typeof SelectFormFieldSchema>;
+export type CheckboxFormField = z.infer<typeof CheckboxFormFieldSchema>;
+
 export type FormField = z.infer<typeof FormFieldSchema>;
