@@ -108,6 +108,7 @@ export const SelectFormFieldSchema = BaseFormFieldSchema.extend({
 		.array(),
 });
 
+
 export const CheckboxFormFieldSchema = BaseFormFieldSchema.extend({
 	type: z.literal("checkbox"),
 	defaultValue: z
@@ -128,6 +129,8 @@ export const FormFieldSchema = z.union([
 
 export type SupportedInputType = z.infer<typeof SupportedInputTypeSchema>;
 export type SupportedFieldType = z.infer<typeof SupportedFieldTypeSchema>;
+
+export type BaseFormField = z.infer<typeof BaseFormFieldSchema>;
 
 export type MinMaxFormField = z.infer<typeof MinMaxFormFieldSchema>;
 

@@ -1,20 +1,20 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import ModularForm from "./ModularForm.vue";
 import {
-	type DateFormField,
+	CheckboxFormFieldSchema,
 	DateFormFieldSchema,
-	TextFormFieldSchema,
-	type FormField,
-	type MinMaxFormField,
-	type TextFormField,
-	type NumberFormField,
 	NumberFormFieldSchema,
 	SelectFormFieldSchema,
-	type SelectFormField,
-	CheckboxFormFieldSchema,
+	TextFormFieldSchema,
 	type CheckboxFormField,
+	type DateFormField,
+	type FormField,
+	type NumberFormField,
+	type SelectFormField,
+	type TextFormField,
 } from "../../types";
+import ModularForm from "./ModularForm.vue";
+import { titleCaseToCamelCase } from "../../lib";
 
 const testFields: FormField[] = [
 	{ name: "firstName", type: "text", min: 1, max: 80 },
@@ -31,36 +31,48 @@ const testFields: FormField[] = [
 	{ name: "message", type: "textarea", min: 10, max: 250 },
 ];
 
-// const newField = ref<Partial<FormField>>({
-// 	type: "text",
-// 	label: "New Field",
-// 	required: true,
-// 	name: "newField"
-// });
-// base fields
-const fieldType = ref<FormField["type"]>("text");
-const fieldLabel = ref<FormField["label"]>();
-const required = ref<FormField["required"]>(true);
+const advanced = ref(false);
+const newField = ref<FormField>({
+	type: "text",
+	label: "New Field",
+	required: true,
+	name: "newField",
+	min: 0,
+	max: 1,
+});
 
-// minmax fields
-const min = ref<MinMaxFormField["min"] | null>(null);
-const max = ref<MinMaxFormField["max"] | null>(null);
+// // base fields
+// const newField.type = ref<FormField["type"]>("text");
+// const fieldLabel = ref<FormField["label"]>();
+// const required = ref<FormField["required"]>(true);
 
-// text and number fields
-const placeholder = ref<TextFormField["placeholder"]>();
-const defaultValue = ref<
-	| TextFormField["defaultValue"]
-	| NumberFormField["defaultValue"]
-	| CheckboxFormField["defaultValue"]
->();
+// // minmax fields
+// const min = ref<MinMaxFormField["min"] | null>(null);
+// const max = ref<MinMaxFormField["max"] | null>(null);
 
-// date fields
-const after = ref<DateFormField["after"] | null>(null);
-const before = ref<DateFormField["before"] | null>(null);
+// // text and number fields
+// const placeholder = ref<TextFormField["placeholder"]>("Field Title");
+// const defaultValue = ref<
+// 	| TextFormField["defaultValue"]
+// 	| NumberFormField["defaultValue"]
+// 	| CheckboxFormField["defaultValue"]
+// >();
 
-// select fields
-// TODO: mandate that there be at least two options
-const options = ref<SelectFormField["options"]>([]);
+// // date fields
+// const after = ref<DateFormField["after"] | null>(null);
+// const before = ref<DateFormField["before"] | null>(null);
+
+// // select fields
+// // TODO: mandate that there be at least two options
+// const options = ref<SelectFormField["options"]>([]);
+
+const handleSubmit = () => {
+	// const baseFieldData = {
+	// 	type: newField.type,
+	// 	name: titleCaseToCamelCase(),
+	// };
+	// e.preventDefault();
+};
 </script>
 <!-- TODO: decide if user should be able to set field name -->
 <!-- TODO: implement other form fields -->
@@ -70,11 +82,11 @@ const options = ref<SelectFormField["options"]>([]);
 	<div class="form-builder">
 		<h2>Build your form:</h2>
 		<div class="panel">
-			<form class="field-builder">
+			<form @submit="handleSubmit" class="field-builder">
 				<h3>Add Form Field</h3>
 				<div>
-					<label for="fieldType">Field Type</label>
-					<select required v-model="fieldType">
+					<label for="newField.type">Field Type</label>
+					<select required v-model="newField.type">
 						<option value="text">Text</option>
 						<option value="textarea">Textarea</option>
 						<option value="email">Email</option>
@@ -89,72 +101,92 @@ const options = ref<SelectFormField["options"]>([]);
 				</div>
 				<div>
 					<label for="fieldLabel">Field Label</label>
-					<input v-model="fieldLabel" />
+					<input
+						:value="newField.label"
+						@input="event => {
+						const {value} = (event.target as HTMLInputElement);
+						newField.label = value;
+						if (!advanced) { newField.name = titleCaseToCamelCase(value)}
+					}"
+					/>
 				</div>
 				<div class="row">
 					<label for="required">Required?</label>
-					<input type="checkbox" v-model="required" />
+					<input type="checkbox" v-model="newField.required" />
 				</div>
 				<template
-					v-if="TextFormFieldSchema.shape.type.safeParse(fieldType).success"
+					v-if="TextFormFieldSchema.shape.type.safeParse(newField.type).success"
 				>
 					<div>
 						<label for="min">Min. Characters</label>
-						<input type="number" v-model="min" />
+						<input type="number" v-model="(newField as TextFormField).min" />
 					</div>
 
 					<div>
 						<label for="max">Max. Characters</label>
-						<input type="number" v-model="max" />
+						<input type="number" v-model="(newField as TextFormField).max" />
 					</div>
 					<div>
 						<label for="placeholder">Placeholder</label>
 						<input
-							:type="fieldType === 'textarea' ? 'textarea' : 'text'"
-							v-model="placeholder"
+							:type="newField.type === 'textarea' ? 'textarea' : 'text'"
+							v-model="(newField as TextFormField).placeholder"
 						/>
 					</div>
 					<div>
 						<label for="defaultValue">Default Value</label>
 						<input
-							:type="fieldType === 'textarea' ? 'textarea' : 'text'"
-							v-model="defaultValue"
+							:type="newField.type === 'textarea' ? 'textarea' : 'text'"
+							v-model="(newField as TextFormField).defaultValue"
 						/>
 					</div>
 				</template>
 				<template
-					v-if="NumberFormFieldSchema.shape.type.safeParse(fieldType).success"
+					v-if="
+						NumberFormFieldSchema.shape.type.safeParse(newField.type).success
+					"
 				>
 					<div>
 						<label for="min">Min. Value</label>
-						<input type="number" v-model="min" />
+						<input type="number" v-model="(newField as NumberFormField).min" />
 					</div>
 
 					<div>
 						<label for="max">Max. Value</label>
-						<input type="number" v-model="max" />
+						<input type="number" v-model="(newField as NumberFormField).max" />
 					</div>
 					<div>
 						<label for="defaultValue">Default Value</label>
-						<input type="number" v-model="defaultValue" />
+						<input
+							type="number"
+							v-model="(newField as NumberFormField).defaultValue"
+						/>
 					</div>
 				</template>
 				<template
-					v-if="DateFormFieldSchema.shape.type.safeParse(fieldType).success"
+					v-if="DateFormFieldSchema.shape.type.safeParse(newField.type).success"
 				>
 					<!-- TODO: validate min being above max -->
 					<div>
 						<label for="after">Earliest Selectable Date</label>
-						<input :type="fieldType" v-model="after" />
+						<input
+							:type="newField.type"
+							v-model="(newField as DateFormField).after"
+						/>
 					</div>
 
 					<div>
 						<label for="max">Latest Selectable Date</label>
-						<input :type="fieldType" v-model="before" />
+						<input
+							:type="newField.type"
+							v-model="(newField as DateFormField).before"
+						/>
 					</div>
 				</template>
 				<template
-					v-if="SelectFormFieldSchema.shape.type.safeParse(fieldType).success"
+					v-if="
+						SelectFormFieldSchema.shape.type.safeParse(newField.type).success
+					"
 				>
 					<!-- TODO: validate min being above max -->
 					<div>
@@ -162,33 +194,50 @@ const options = ref<SelectFormField["options"]>([]);
 						<input
 							type="textarea"
 							name="options"
-							@input="event => options = (event.target as HTMLInputElement)
+							@input="event => (newField as SelectFormField).options = (event.target as HTMLInputElement)
 							.value
 							.split(',')
 							.map(option => option.trim())
 							"
 						/>
-						<p>{{ JSON.stringify(options) }}</p>
+						<p>{{ JSON.stringify((newField as SelectFormField).options) }}</p>
 					</div>
 				</template>
 				<template
-					v-if="CheckboxFormFieldSchema.shape.type.safeParse(fieldType).success"
+					v-if="
+						CheckboxFormFieldSchema.shape.type.safeParse(newField.type).success
+					"
 				>
 					<!-- TODO: validate min being above max -->
 					<div>
-						<label for="options">Options (comma-separated)</label>
+						<label for="defaultValue">Checked by Default?</label>
 						<input
-							type="textarea"
-							name="options"
-							@input="event => options = (event.target as HTMLInputElement)
-							.value
-							.split(',')
-							.map(option => option.trim())
-							"
+							type="checkbox"
+							v-model="(newField as CheckboxFormField).defaultValue"
 						/>
-						<p>{{ JSON.stringify(options) }}</p>
 					</div>
 				</template>
+				<div>
+					<label for="advanced">Advanced Mode?</label>
+					<input
+						type="checkbox"
+						v-model="advanced"
+						@change="event => {
+							// resets form field name back to camelCase field title when advanced mode is disabled
+							const {checked} = (event.target as HTMLInputElement);
+							if (!checked) { 
+								newField.name = titleCaseToCamelCase(newField?.label?? '')
+							}
+						}"
+					/>
+				</div>
+				<template v-if="advanced">
+					<div>
+						<label for="fieldLabel">Field Name (json)</label>
+						<input v-model="newField.name" />
+					</div>
+				</template>
+				<input type="submit" value="Add Field" />
 			</form>
 			<div class="preview">
 				<ModularForm class="form" :fields="testFields" />
