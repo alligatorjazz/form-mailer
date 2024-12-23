@@ -16,62 +16,64 @@ import {
 import ModularForm from "./ModularForm.vue";
 import { titleCaseToCamelCase } from "../../lib";
 
-const testFields: FormField[] = [
-	{ name: "firstName", type: "text", min: 1, max: 80 },
-	{ name: "lastName", type: "text", min: 1, max: 80 },
-	{ name: "email", type: "email", min: 1, max: 80 },
-	{ name: "phone", type: "tel", min: 4, max: 15 },
-	{ name: "isCool", type: "checkbox", label: "Are You Cool?" },
-	{
-		name: "radLevel",
-		type: "radio",
-		options: ["1", "2", "3"],
-		label: "Radness Level",
-	},
-	{ name: "message", type: "textarea", min: 10, max: 250 },
-];
-
-const advanced = ref(false);
-const newField = ref<FormField>({
+// const testFields: FormField[] = [
+// 	{ name: "firstName", type: "text", min: 1, max: 80 },
+// 	{ name: "lastName", type: "text", min: 1, max: 80 },
+// 	{ name: "email", type: "email", min: 1, max: 80 },
+// 	{ name: "phone", type: "tel", min: 4, max: 15 },
+// 	{ name: "isCool", type: "checkbox", label: "Are You Cool?" },
+// 	{
+// 		name: "radLevel",
+// 		type: "radio",
+// 		options: ["1", "2", "3"],
+// 		label: "Radness Level",
+// 	},
+// 	{ name: "message", type: "textarea", min: 10, max: 250 },
+// ];
+const defaultField: FormField = {
 	type: "text",
 	label: "New Field",
 	required: true,
 	name: "newField",
 	min: 0,
-	max: 1,
-});
+	max: 250,
+};
+const advanced = ref(false);
+const newField = ref<FormField>(defaultField);
+const formData = ref<FormField[]>([]);
 
-// // base fields
-// const newField.type = ref<FormField["type"]>("text");
-// const fieldLabel = ref<FormField["label"]>();
-// const required = ref<FormField["required"]>(true);
+const addField = (e: Event) => {
+	// TODO: add validation error messages
+	e.preventDefault();
+	console.log(newField.value);
+	const fieldType = newField.value.type;
+	let fieldData: FormField;
+	switch (fieldType) {
+		case "text":
+		case "textarea":
+		case "tel":
+		case "email":
+			fieldData = TextFormFieldSchema.parse(newField.value);
+			break;
+		case "number":
+			fieldData = NumberFormFieldSchema.parse(newField.value);
+			break;
+		case "date":
+		case "datetime-local":
+			fieldData = DateFormFieldSchema.parse(newField.value);
+			break;
+		case "checkbox":
+			fieldData = CheckboxFormFieldSchema.parse(newField.value);
+			break;
+		case "radio":
+		case "select":
+			fieldData = SelectFormFieldSchema.parse(newField.value);
+			break;
+		default:
+			throw new Error("Field type not valid.")
+	}
 
-// // minmax fields
-// const min = ref<MinMaxFormField["min"] | null>(null);
-// const max = ref<MinMaxFormField["max"] | null>(null);
-
-// // text and number fields
-// const placeholder = ref<TextFormField["placeholder"]>("Field Title");
-// const defaultValue = ref<
-// 	| TextFormField["defaultValue"]
-// 	| NumberFormField["defaultValue"]
-// 	| CheckboxFormField["defaultValue"]
-// >();
-
-// // date fields
-// const after = ref<DateFormField["after"] | null>(null);
-// const before = ref<DateFormField["before"] | null>(null);
-
-// // select fields
-// // TODO: mandate that there be at least two options
-// const options = ref<SelectFormField["options"]>([]);
-
-const handleSubmit = () => {
-	// const baseFieldData = {
-	// 	type: newField.type,
-	// 	name: titleCaseToCamelCase(),
-	// };
-	// e.preventDefault();
+	formData.value.push(fieldData);
 };
 </script>
 <!-- TODO: decide if user should be able to set field name -->
@@ -82,7 +84,7 @@ const handleSubmit = () => {
 	<div class="form-builder">
 		<h2>Build your form:</h2>
 		<div class="panel">
-			<form @submit="handleSubmit" class="field-builder">
+			<form @submit="addField" class="field-builder">
 				<h3>Add Form Field</h3>
 				<div>
 					<label for="newField.type">Field Type</label>
@@ -240,8 +242,8 @@ const handleSubmit = () => {
 				<input type="submit" value="Add Field" />
 			</form>
 			<div class="preview">
-				<ModularForm class="form" :fields="testFields" />
-				<div>new field</div>
+				<h3>Preview</h3>
+				<ModularForm class="form" :fields="formData" />
 			</div>
 		</div>
 	</div>
